@@ -3,6 +3,9 @@
  * - I'm currently using _.bind for scope bindings. May need to change this
  *   later for performance.
  * - Consider implementing a priority queue for better collision handling.
+ *   - Might not matter because other forces (e.g. repulsion) are going to be
+ *     O(N^2) no matter what.
+ * - Watch out for divide by zero errors.
  */
 
 //window.requestAnimationFrame = window.requestAnimationFrame ||
@@ -14,8 +17,8 @@ var start = 0;
 
 var Renderer = function(graph) {
   this.env = {
-    accel: 0,
-    dt: 1.0 / 60
+    ke: 10,      // Self-defined Coulomb's constant
+    dt: 1.0 / 60 // Time step
   }
   this.running = false;
   this.graph = graph;
@@ -37,18 +40,15 @@ Renderer.prototype.step = function() {
   }
 };
 
-Renderer.prototype.initializeRandomVelocities = function() {
-  this.graph.nodes.forEach(function(node) {
-    var xVel = Math.random() * 100 - 50;
-    var yVel = Math.random() * 100 - 50;
-    node.vel.x = xVel;
-    node.vel.y = yVel;
-  });
-};
-
+/*
+ * TODO: Can optimize this by using a single/double pass over all these
+ *       functions. Might not be accurate, though.
+ */
 Renderer.prototype.applyPhysics = function() {
-  this.updatePositions();
-  this.updateVelocities();
+  this.applyElectricRepulsion(); // O(N^2)
+  this.handleCollisions();       // O(N)
+  this.updatePositions();        // O(N)
+  this.updateVelocities();       // O(N)
 };
 
 Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
@@ -63,10 +63,37 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
 }
 
 /*
- * Apply Coulomb's law: F = k(q1 q2)/ r^2, then 
- * Make charge (q) proportional to node radius.
+ * Apply Coulomb's law: F = k(q1 q2)/ r^2 * rhat = m a
+ *                      a = k(q1 q2)/(r^2 m) * rhat
+ *                      where rhat is the unit direction vector:
+ * Let charge and k be constants.
  */
 Renderer.prototype.applyElectricRepulsion = function() {
+  if (this.graph.nodes.length > 1) {
+    for (var i = 0; i < this.graph.nodes.length - 1; i++) {
+      var node1 = this.graph.nodes[i];
+      for (var j = i + 1; j < this.graph.nodes.length; j++) {
+        var node2 = this.graph.nodes[j];
+        var xDist = node1.pos.x - node2.pos.x;
+        var yDist = node1.pos.y - node2.pos.y;
+        // Add a slight displacement to avoid divide by zero errors for
+        // overlapping nodes.
+        var mag = Math.sqrt(xDist * xDist + yDist * yDist) + 0.00001;
+        var da1 = this.env.ke / (mag * mag * node1.rad * node1.sizeMassRatio);
+        var da2 = this.env.ke / (mag * mag * node2.rad * node2.sizeMassRatio);
+        node1.acc.x += da1 * xDist;
+        node1.acc.y += da1 * yDist;
+        node2.acc.x -= da2 * xDist;
+        node2.acc.y -= da2 * yDist;
+      }
+    }
+  }
+}
+
+Renderer.prototype.handleCollisions = function() {
+  this.graph.nodes.forEach(_.bind(function(node) {
+    this.checkBoundaryCollisions(node, this.graph);
+  }, this));
 }
 
 /*
@@ -74,7 +101,6 @@ Renderer.prototype.applyElectricRepulsion = function() {
  */
 Renderer.prototype.updatePositions = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
-    this.checkBoundaryCollisions(node, this.graph);
     node.pos.x += node.vel.x * this.env.dt;
     node.pos.y += node.vel.y * this.env.dt;
   }, this));
@@ -85,8 +111,8 @@ Renderer.prototype.updatePositions = function() {
  */
 Renderer.prototype.updateVelocities = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
-    node.vel.x += this.env.accel * this.env.dt;
-    node.vel.y += this.env.accel * this.env.dt;
+    node.vel.x += node.acc.x * this.env.dt;
+    node.vel.y += node.acc.y * this.env.dt;
   }, this));
 };
 

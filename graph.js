@@ -11,6 +11,7 @@
  */
 var Node = function(pos, vel, acc, rad) {
   this.selected = false;
+  this.sizeMassRatio = 0.05; // mass = sizeMassRatio * radius
   this.pos = pos;
   this.vel = vel;
   this.acc = acc;
@@ -40,7 +41,7 @@ Graph.prototype.addNode = function(node) {
  */
 Graph.prototype.selectNode = function(xCoord, yCoord) {
   this.nodes.forEach(function(node) {
-    node.selected = false; // NOTE: Can optimize this by storing a pointer
+    node.selected = false; // TODO: Can optimize this by storing a pointer
                            //       to the selected node.
   });
   for (var i = 0; i < this.nodes.length; i++) {

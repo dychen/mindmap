@@ -18,7 +18,6 @@ $(document).ready(function() {
   $(document).on('keypress', function(e) {
     if (e.which === ENTER_KEY) {
       if (renderer.running === false) {
-        renderer.initializeRandomVelocities();
         renderer.start();
       }
       else {
