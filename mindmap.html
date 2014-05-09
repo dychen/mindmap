@@ -1,0 +1,42 @@
+<html>
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Mind Map</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+        <p> Double click inside the graph to create a new node. <p>
+        <p> Drag a node outside of the graph to delete it. <p>
+
+        <canvas id="graph" class="graph">
+        </canvas>
+
+        <!-- Templates -->
+
+        <script type="text/template" id="vertextemplate">
+            <p class="node">Label: <%- label %></p>
+        </script>
+
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/jquery-ui-1.10.4.custom.min.js"></script>
+        <script src="lib/underscore-min.js"></script>
+        <script src="mindmap.js"></script>
+        <script src="render.js"></script>
+        <script src="graph.js"></script>
+     </body>
+</html>

@@ -1,0 +1,9 @@
+.node {
+  background-color: #999999;
+  border-width: 3px;
+  border-radius: 50%;
+}
+
+.graph {
+  background-color: #222222;
+}
