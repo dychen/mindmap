@@ -174,10 +174,22 @@ Renderer.prototype.radialGradient = function(node) {
     node.rad);
   grad.addColorStop(0, '#999999');
   if (node.selected === true) {
-    grad.addColorStop(1, '#339933');
+    if (node.destinationNode === true) {
+      grad.addColorStop(0.8, '#339933');
+      grad.addColorStop(1, '#993333');
+    }
+    else {
+      grad.addColorStop(1, '#339933');
+    }
   }
   else {
-    grad.addColorStop(1, '#333399');
+    if (node.destinationNode === true) {
+      grad.addColorStop(0.8, '#333399');
+      grad.addColorStop(1, '#993333');
+    }
+    else {
+      grad.addColorStop(1, '#333399');
+    }
   }
   return grad;
 };

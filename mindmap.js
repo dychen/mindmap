@@ -23,10 +23,18 @@ $(document).ready(function() {
     }
   });
 
+  $('#graph').on('mousemove', function(e) {
+    if (graph.drawingEdge === true) {
+      graph.deselectDestinationNode();
+      graph.selectDestinationNode(graph.findNode(e.pageX, e.pageY));
+      renderer.start();
+    }
+  });
+
   $('#graph').on('mouseup', function(e) {
     if (graph.drawingEdge === true) {
       graph.createEdge(graph.selectedNode, graph.findNode(e.pageX, e.pageY));
-      graph.destinationNode = null;
+      graph.deselectDestinationNode();
       graph.drawingEdge = false;
       renderer.start();
     }

@@ -11,6 +11,7 @@
  */
 var Node = function(pos, vel, acc, rad) {
   this.selected = false;
+  this.destinationNode = false;
   this.sizeMassRatio = 0.05; // mass = sizeMassRatio * radius
   this.pos = pos;
   this.vel = vel;
@@ -74,6 +75,23 @@ Graph.prototype.deselectNode = function() {
     this.selectedNode = null;
   }
 };
+
+Graph.prototype.selectDestinationNode = function(node) {
+  if (node !== null) {
+    node.destinationNode = true;
+    this.destinationNode = node;
+  }
+  else {
+    this.deselectDestinationNode();
+  }
+};
+
+Graph.prototype.deselectDestinationNode = function() {
+  if (this.destinationNode !== null) {
+    this.destinationNode.destinationNode = false;
+    this.destinationNode = null;
+  }
+}
 
 Graph.prototype.createEdge = function(node1, node2) {
   if (node1 !== null && node2 !== null && this.containsEdge(node1, node2) === false) {
