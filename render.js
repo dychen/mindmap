@@ -51,6 +51,18 @@ Renderer.prototype.applyPhysics = function() {
   this.updateVelocities();       // O(N)
 };
 
+Renderer.prototype.render = function() {
+  this.graph.context.clearRect(0, 0, this.graph.canvas.width, this.graph.canvas.height);
+  this.drawEdges(); // Draw edges first so they're farthest in the background.
+  this.drawNodes();
+};
+
+Renderer.prototype.handleCollisions = function() {
+  this.graph.nodes.forEach(_.bind(function(node) {
+    this.checkBoundaryCollisions(node, this.graph);
+  }, this));
+}
+
 Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
   if (node.pos.x - graph.offsets.xOffset - node.rad <= 0 ||
       node.pos.x - graph.offsets.xOffset + node.rad >= graph.canvas.width) {
@@ -90,12 +102,6 @@ Renderer.prototype.applyElectricRepulsion = function() {
   }
 }
 
-Renderer.prototype.handleCollisions = function() {
-  this.graph.nodes.forEach(_.bind(function(node) {
-    this.checkBoundaryCollisions(node, this.graph);
-  }, this));
-}
-
 /*
  * x' = x + v dt
  */
@@ -116,12 +122,6 @@ Renderer.prototype.updateVelocities = function() {
   }, this));
 };
 
-Renderer.prototype.render = function() {
-  this.graph.context.clearRect(0, 0, this.graph.canvas.width, this.graph.canvas.height);
-  this.drawNodes();
-  this.drawEdges();
-};
-
 Renderer.prototype.drawNodes = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
     this.drawNode(node);
@@ -129,7 +129,9 @@ Renderer.prototype.drawNodes = function() {
 };
 
 Renderer.prototype.drawEdges = function() {
-  
+  this.graph.edges.forEach(_.bind(function(edge) {
+    this.drawEdge(edge);
+  }, this));
 };
 
 Renderer.prototype.iterNext = function() {
@@ -137,7 +139,7 @@ Renderer.prototype.iterNext = function() {
 
 
 /*
- * View Methods
+ * Drawing Methods
  */
 
 Renderer.prototype.drawNode = function(node) {
@@ -151,6 +153,16 @@ Renderer.prototype.drawNode = function(node) {
   this.graph.context.fillStyle = grad;
   this.graph.context.fill();
 };
+
+Renderer.prototype.drawEdge = function(edge) {
+  this.graph.context.moveTo(edge.v1.pos.x - this.graph.offsets.xOffset,
+                            edge.v1.pos.y - this.graph.offsets.yOffset);
+  this.graph.context.lineTo(edge.v2.pos.x - this.graph.offsets.xOffset,
+                            edge.v2.pos.y - this.graph.offsets.yOffset);
+  this.graph.context.strokeStyle = '#999999';
+  this.graph.context.lineWidth = 2;
+  this.graph.context.stroke();
+}
 
 Renderer.prototype.radialGradient = function(node) {
   var grad = this.graph.context.createRadialGradient(
