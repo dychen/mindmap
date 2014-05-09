@@ -18,7 +18,8 @@ var start = 0;
 var Renderer = function(graph) {
   this.env = {
     ke: 0.1,      // Self-defined Coulomb's constant
-    ks: 0.000005, // Self-defined spring constant
+    ks: 0.05,     // Self-defined spring constant
+    cs: 0.5,      // Damping coefficient
     dt: 1.0 / 60  // Time step
   }
   this.running = false;
@@ -47,9 +48,9 @@ Renderer.prototype.step = function() {
  */
 Renderer.prototype.applyPhysics = function() {
   // TODO: Might need a single pass over all of the forces for more accuracy.
-  //this.applyForces();            // O(V^2)
-  this.applyElectricRepulsion(); // O(V^2)
-  this.applyRestoringForce();    // O(E)
+  this.applyForces();            // O(V^2)
+  //this.applyElectricRepulsion(); // O(V^2)
+  //this.applyRestoringForce();    // O(E)
   this.handleCollisions();       // O(V)
   this.updatePositions();        // O(V)
   this.updateVelocities();       // O(V)
@@ -78,15 +79,37 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
   }
 };
 
+/*
+ * Apply damped harmonic oscillation:
+ * F = -kx-cv
+ */
 Renderer.prototype.applyForces = function() {
-  this.graph.nodes.forEach(_.bind(function(node1) {
-    this.graph.nodes.forEach(_.bind(function(node2) {
-
-    }, this));
+  this.graph.nodes.forEach(function(node) {
+    node.acc.x = 0;
+    node.acc.y = 0;
+  });
+  this.graph.edges.forEach(_.bind(function(edge) {
+    var node1 = edge.v1;
+    var node2 = edge.v2;
+    var xDist = node2.pos.x - node1.pos.y;
+    var yDist = node2.pos.y - node1.pos.y;
+    var da1x = this.env.ks * xDist - this.env.cs * node1.vel.x;
+    var da1y = this.env.ks * yDist - this.env.cs * node1.vel.y;
+    var da2x = this.env.ks * xDist + this.env.cs * node2.vel.x;
+    var da2y = this.env.ks * yDist + this.env.cs * node2.vel.y;
+    node1.acc.x += da1x;
+    node1.acc.y += da1y;
+    node2.acc.x -= da2x;
+    node2.acc.y -= da2y;
   }, this));
+  this.graph.nodes.forEach(function(node) {
+    node.acc.x /= (node.rad * node.sizeMassRatio);
+    node.acc.y /= (node.rad * node.sizeMassRatio);
+  });
 };
 
 /*
+ * UNUSED
  * Apply Coulomb's law: F = k(q1 q2)/ r^2 * rhat = m a
  *                      a = k(q1 q2)/(r^2 m) * rhat
  *                      where rhat is the unit direction vector.
@@ -115,6 +138,7 @@ Renderer.prototype.applyElectricRepulsion = function() {
 };
 
 /*
+ * UNUSED
  * Apply Hooke's Law (with damping): F = -k x xhat = m a
  *                                   a = -k x xhat / m
  *                                   where xhat is the unit direction vector.
@@ -126,8 +150,6 @@ Renderer.prototype.applyRestoringForce = function() {
     var node2 = edge.v2;
     var xDist = node2.pos.x - node1.pos.x;
     var yDist = node2.pos.y - node1.pos.y;
-    // Add a slight displacement to avoid divide by zero errors for overlapping
-    // nodes.
     var da1 = this.env.ks / (2 * node1.rad * node1.sizeMassRatio);
     var da2 = this.env.ks / (2 * node2.rad * node2.sizeMassRatio);
     node1.acc.x += da1 * xDist;
@@ -190,6 +212,7 @@ Renderer.prototype.drawNode = function(node) {
 };
 
 Renderer.prototype.drawEdge = function(edge) {
+  this.graph.context.beginPath();
   this.graph.context.moveTo(edge.v1.pos.x - this.graph.offsets.xOffset,
                             edge.v1.pos.y - this.graph.offsets.yOffset);
   this.graph.context.lineTo(edge.v2.pos.x - this.graph.offsets.xOffset,
