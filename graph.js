@@ -4,14 +4,17 @@
  */
 
 /*
- * @data hash containing:
- *   xPos, yPos
- *   xVel, yVel
- *   radius
+ * pos (2D Vector) Position vector (pos.x, pos.y)
+ * vel (2D Vector) Velocity vector (vel.x, vel.y)
+ * acc (2D Vector) Acceleration vector (acc.x, acc.y)
+ * rad (integer)   Radius
  */
-var Node = function(data) {
+var Node = function(pos, vel, acc, rad) {
   this.selected = false;
-  this.data = data;
+  this.pos = pos;
+  this.vel = vel;
+  this.acc = acc;
+  this.rad = rad;
 };
 
 var Graph = function() {
@@ -42,9 +45,9 @@ Graph.prototype.selectNode = function(xCoord, yCoord) {
   });
   for (var i = 0; i < this.nodes.length; i++) {
     var node = this.nodes[i];
-    var xDist = xCoord - node.data.xPos;
-    var yDist = yCoord - node.data.yPos;
-    if (Math.sqrt(xDist * xDist + yDist * yDist) < node.data.radius) {
+    var xDist = xCoord - node.pos.x;
+    var yDist = yCoord - node.pos.y;
+    if (Math.sqrt(xDist * xDist + yDist * yDist) < node.rad) {
       node.selected = true;
       break;
     }

@@ -41,8 +41,8 @@ Renderer.prototype.initializeRandomVelocities = function() {
   this.graph.nodes.forEach(function(node) {
     var xVel = Math.random() * 100 - 50;
     var yVel = Math.random() * 100 - 50;
-    node.data.xVel = xVel;
-    node.data.yVel = yVel;
+    node.vel.x = xVel;
+    node.vel.y = yVel;
   });
 };
 
@@ -52,14 +52,21 @@ Renderer.prototype.applyPhysics = function() {
 };
 
 Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
-  if (node.data.xPos - graph.offsets.xOffset - node.data.radius <= 0 ||
-      node.data.xPos - graph.offsets.xOffset + node.data.radius >= graph.canvas.width) {
-    node.data.xVel = -node.data.xVel;
+  if (node.pos.x - graph.offsets.xOffset - node.rad <= 0 ||
+      node.pos.x - graph.offsets.xOffset + node.rad >= graph.canvas.width) {
+    node.vel.x = -node.vel.x;
   }
-  if (node.data.yPos - graph.offsets.yOffset - node.data.radius <= 0 ||
-      node.data.yPos - graph.offsets.yOffset + node.data.radius >= graph.canvas.height) {
-    node.data.yVel = -node.data.yVel;
+  if (node.pos.y - graph.offsets.yOffset - node.rad <= 0 ||
+      node.pos.y - graph.offsets.yOffset + node.rad >= graph.canvas.height) {
+    node.vel.y = -node.vel.y;
   }
+}
+
+/*
+ * Apply Coulomb's law: F = k(q1 q2)/ r^2, then 
+ * Make charge (q) proportional to node radius.
+ */
+Renderer.prototype.applyElectricRepulsion = function() {
 }
 
 /*
@@ -68,8 +75,8 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
 Renderer.prototype.updatePositions = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
     this.checkBoundaryCollisions(node, this.graph);
-    node.data.xPos += node.data.xVel * this.env.dt;
-    node.data.yPos += node.data.yVel * this.env.dt;
+    node.pos.x += node.vel.x * this.env.dt;
+    node.pos.y += node.vel.y * this.env.dt;
   }, this));
 };
 
@@ -78,8 +85,8 @@ Renderer.prototype.updatePositions = function() {
  */
 Renderer.prototype.updateVelocities = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
-    node.data.xVel += this.env.accel * this.env.dt;
-    node.data.yVel += this.env.accel * this.env.dt;
+    node.vel.x += this.env.accel * this.env.dt;
+    node.vel.y += this.env.accel * this.env.dt;
   }, this));
 };
 
@@ -109,9 +116,9 @@ Renderer.prototype.iterNext = function() {
 
 Renderer.prototype.drawNode = function(node) {
   this.graph.context.beginPath();
-  this.graph.context.arc(node.data.xPos - this.graph.offsets.xOffset,
-                         node.data.yPos - this.graph.offsets.yOffset,
-                         node.data.radius, 0, 2 * Math.PI);
+  this.graph.context.arc(node.pos.x - this.graph.offsets.xOffset,
+                         node.pos.y - this.graph.offsets.yOffset,
+                         node.rad, 0, 2 * Math.PI);
   this.graph.context.strokeStyle = '#333333';
   this.graph.context.stroke();
   var grad = this.radialGradient(node);
@@ -121,12 +128,12 @@ Renderer.prototype.drawNode = function(node) {
 
 Renderer.prototype.radialGradient = function(node) {
   var grad = this.graph.context.createRadialGradient(
-    node.data.xPos - this.graph.offsets.xOffset - node.data.radius/4,
-    node.data.yPos - this.graph.offsets.yOffset - node.data.radius/4,
-    node.data.radius/8,
-    node.data.xPos - this.graph.offsets.xOffset,
-    node.data.yPos - this.graph.offsets.yOffset,
-    node.data.radius);
+    node.pos.x - this.graph.offsets.xOffset - node.rad/4,
+    node.pos.y - this.graph.offsets.yOffset - node.rad/4,
+    node.rad/8,
+    node.pos.x - this.graph.offsets.xOffset,
+    node.pos.y - this.graph.offsets.yOffset,
+    node.rad);
   grad.addColorStop(0, '#999999');
   if (node.selected === true) {
     grad.addColorStop(1, '#339933');

@@ -5,11 +5,7 @@ $(document).ready(function() {
   var renderer = new Renderer(graph);
 
   $('#graph').on('dblclick', function(e) {
-    var node = new Node({ xPos: e.pageX,
-                          yPos: e.pageY,
-                          xVel: 0,
-                          yVel: 0,
-                          radius: 50 });
+    var node = new Node(new Vector(e.pageX, e.pageY), new Vector(0, 0), new Vector(0, 0), 50);
     graph.addNode(node);
     renderer.drawNode(node);
   });
