@@ -91,7 +91,7 @@ Graph.prototype.deselectDestinationNode = function() {
     this.destinationNode.destinationNode = false;
     this.destinationNode = null;
   }
-}
+};
 
 Graph.prototype.createEdge = function(node1, node2) {
   if (node1 !== null && node2 !== null && this.containsEdge(node1, node2) === false) {

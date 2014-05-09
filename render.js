@@ -17,7 +17,8 @@ var start = 0;
 
 var Renderer = function(graph) {
   this.env = {
-    ke: 10,      // Self-defined Coulomb's constant
+    ke: 0.1,     // Self-defined Coulomb's constant
+    ks: 0.00005, // Self-defined spring constant
     dt: 1.0 / 60 // Time step
   }
   this.running = false;
@@ -45,10 +46,12 @@ Renderer.prototype.step = function() {
  *       functions. Might not be accurate, though.
  */
 Renderer.prototype.applyPhysics = function() {
-  this.applyElectricRepulsion(); // O(N^2)
-  this.handleCollisions();       // O(N)
-  this.updatePositions();        // O(N)
-  this.updateVelocities();       // O(N)
+  // TODO: Might need a single pass over all of the forces for more accuracy.
+  this.applyElectricRepulsion(); // O(V^2)
+  this.applyRestoringForce();    // O(E)
+  this.handleCollisions();       // O(V)
+  this.updatePositions();        // O(V)
+  this.updateVelocities();       // O(V)
 };
 
 Renderer.prototype.render = function() {
@@ -61,7 +64,7 @@ Renderer.prototype.handleCollisions = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
     this.checkBoundaryCollisions(node, this.graph);
   }, this));
-}
+};
 
 Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
   if (node.pos.x - graph.offsets.xOffset - node.rad <= 0 ||
@@ -72,12 +75,12 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
       node.pos.y - graph.offsets.yOffset + node.rad >= graph.canvas.height) {
     node.vel.y = -node.vel.y;
   }
-}
+};
 
 /*
  * Apply Coulomb's law: F = k(q1 q2)/ r^2 * rhat = m a
  *                      a = k(q1 q2)/(r^2 m) * rhat
- *                      where rhat is the unit direction vector:
+ *                      where rhat is the unit direction vector.
  * Let charge and k be constants.
  */
 Renderer.prototype.applyElectricRepulsion = function() {
@@ -91,8 +94,8 @@ Renderer.prototype.applyElectricRepulsion = function() {
         // Add a slight displacement to avoid divide by zero errors for
         // overlapping nodes.
         var mag = Math.sqrt(xDist * xDist + yDist * yDist) + 0.00001;
-        var da1 = this.env.ke / (mag * mag * node1.rad * node1.sizeMassRatio);
-        var da2 = this.env.ke / (mag * mag * node2.rad * node2.sizeMassRatio);
+        var da1 = this.env.ke / (mag * mag * mag * node1.rad * node1.sizeMassRatio);
+        var da2 = this.env.ke / (mag * mag * mag * node2.rad * node2.sizeMassRatio);
         node1.acc.x += da1 * xDist;
         node1.acc.y += da1 * yDist;
         node2.acc.x -= da2 * xDist;
@@ -100,7 +103,30 @@ Renderer.prototype.applyElectricRepulsion = function() {
       }
     }
   }
-}
+};
+
+/*
+ * Apply Hooke's Law (with damping): F = -k x xhat = m a
+ *                                   a = -k x xhat / m
+ *                                   where xhat is the unit direction vector.
+ * Let k be a constant.
+ */
+Renderer.prototype.applyRestoringForce = function() {
+  this.graph.edges.forEach(_.bind(function(edge) {
+    var node1 = edge.v1;
+    var node2 = edge.v2;
+    var xDist = node2.pos.x - node1.pos.x;
+    var yDist = node2.pos.y - node1.pos.y;
+    // Add a slight displacement to avoid divide by zero errors for overlapping
+    // nodes.
+    var da1 = this.env.ks / (2 * node1.rad * node1.sizeMassRatio);
+    var da2 = this.env.ks / (2 * node2.rad * node2.sizeMassRatio);
+    node1.acc.x += da1 * xDist;
+    node1.acc.y += da1 * yDist;
+    node2.acc.x -= da2 * xDist;
+    node2.acc.y -= da2 * yDist;
+  }, this));
+};
 
 /*
  * x' = x + v dt

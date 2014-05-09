@@ -5,9 +5,14 @@ $(document).ready(function() {
   var renderer = new Renderer(graph);
 
   $('#graph').on('dblclick', function(e) {
-    var node = new Node(new Vector(e.pageX, e.pageY), new Vector(0, 0), new Vector(0, 0), 50);
-    graph.addNode(node);
-    renderer.drawNode(node);
+    if (graph.findNode(e.pageX, e.pageY) === null) {
+      var node = new Node(new Vector(e.pageX, e.pageY),
+                          new Vector(0, 0),
+                          new Vector(0, 0),
+                          50);
+      graph.addNode(node);
+      renderer.drawNode(node);
+    }
   });
 
   $('#graph').on('click', function(e) {
