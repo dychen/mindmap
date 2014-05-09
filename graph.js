@@ -36,6 +36,8 @@ var Graph = function() {
   this.drawingEdge = false;    // True if currently drawing an edge.
   this.destinationNode = null; // Points to the node an edge would be drawn to,
                                // null otherwise.
+  this.movingNode = null;      // Points to the node that's currently being
+                               // moved, null otherwise.
   // Model components
   this.nodes = [];
   this.edges = [];
@@ -109,5 +111,22 @@ Graph.prototype.containsEdge = function(node1, node2) {
     }
   }
   return false;
+};
+
+Graph.prototype.selectMovingNode = function(node) {
+  if (node !== null) {
+    this.movingNode = node;
+  }
+};
+
+Graph.prototype.moveNodeToMouse = function(node, xCoord, yCoord) {
+  node.vel.x = (xCoord - node.pos.x) * 10;
+  node.vel.y = (yCoord - node.pos.y) * 10;
+};
+
+Graph.prototype.deselectMovingNode = function() {
+  if (this.movingNode !== null) {
+    this.movingNode = null;
+  }
 };
 

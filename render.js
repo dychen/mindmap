@@ -17,9 +17,9 @@ var start = 0;
 
 var Renderer = function(graph) {
   this.env = {
-    ke: 0.1,     // Self-defined Coulomb's constant
-    ks: 0.00005, // Self-defined spring constant
-    dt: 1.0 / 60 // Time step
+    ke: 0.1,      // Self-defined Coulomb's constant
+    ks: 0.000005, // Self-defined spring constant
+    dt: 1.0 / 60  // Time step
   }
   this.running = false;
   this.graph = graph;
@@ -47,6 +47,7 @@ Renderer.prototype.step = function() {
  */
 Renderer.prototype.applyPhysics = function() {
   // TODO: Might need a single pass over all of the forces for more accuracy.
+  //this.applyForces();            // O(V^2)
   this.applyElectricRepulsion(); // O(V^2)
   this.applyRestoringForce();    // O(E)
   this.handleCollisions();       // O(V)
@@ -75,6 +76,14 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
       node.pos.y - graph.offsets.yOffset + node.rad >= graph.canvas.height) {
     node.vel.y = -node.vel.y;
   }
+};
+
+Renderer.prototype.applyForces = function() {
+  this.graph.nodes.forEach(_.bind(function(node1) {
+    this.graph.nodes.forEach(_.bind(function(node2) {
+
+    }, this));
+  }, this));
 };
 
 /*
@@ -188,7 +197,7 @@ Renderer.prototype.drawEdge = function(edge) {
   this.graph.context.strokeStyle = '#999999';
   this.graph.context.lineWidth = 2;
   this.graph.context.stroke();
-}
+};
 
 Renderer.prototype.radialGradient = function(node) {
   var grad = this.graph.context.createRadialGradient(

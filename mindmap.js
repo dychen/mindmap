@@ -16,15 +16,22 @@ $(document).ready(function() {
   });
 
   $('#graph').on('click', function(e) {
-    graph.deselectNode();
-    graph.selectNode(graph.findNode(e.pageX, e.pageY));
-    renderer.start();
+    if (graph.selectedNode === null) {
+      graph.selectNode(graph.findNode(e.pageX, e.pageY));
+      renderer.start();
+    }
+    else {
+      graph.deselectNode();
+    }
   });
 
   $('#graph').on('mousedown', function(e) {
     if (graph.selectedNode !== null &&
         graph.findNode(e.pageX, e.pageY) === graph.selectedNode) {
       graph.drawingEdge = true;
+    }
+    else if (graph.selectedNode === null) {
+      graph.selectMovingNode(graph.findNode(e.pageX, e.pageY));
     }
   });
 
@@ -34,14 +41,21 @@ $(document).ready(function() {
       graph.selectDestinationNode(graph.findNode(e.pageX, e.pageY));
       renderer.start();
     }
+    else if (graph.movingNode !== null) {
+      graph.moveNodeToMouse(graph.movingNode, e.pageX, e.pageY);
+      renderer.start();
+    }
   });
 
   $('#graph').on('mouseup', function(e) {
-    if (graph.drawingEdge === true) {
+    if (graph.drawingEdge === true && graph.movingNode === null) {
       graph.createEdge(graph.selectedNode, graph.findNode(e.pageX, e.pageY));
       graph.deselectDestinationNode();
       graph.drawingEdge = false;
       renderer.start();
+    }
+    else if (graph.movingNode !== null) {
+      graph.deselectMovingNode();
     }
   });
 
