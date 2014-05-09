@@ -22,9 +22,10 @@ var Renderer = function(graph) {
 };
 
 Renderer.prototype.start = function() {
-  this.running = true;
-  this.initializeRandomVelocities();
-  window.requestAnimationFrame(_.bind(this.step, this));
+  if (this.running === false) {
+    this.running = true;
+    window.requestAnimationFrame(_.bind(this.step, this));
+  }
 };
 
 Renderer.prototype.step = function() {
@@ -127,6 +128,11 @@ Renderer.prototype.radialGradient = function(node) {
     node.data.yPos - this.graph.offsets.yOffset,
     node.data.radius);
   grad.addColorStop(0, '#999999');
-  grad.addColorStop(1, '#333399');
+  if (node.selected === true) {
+    grad.addColorStop(1, '#339933');
+  }
+  else {
+    grad.addColorStop(1, '#333399');
+  }
   return grad;
 };

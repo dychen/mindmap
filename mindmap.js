@@ -15,12 +15,14 @@ $(document).ready(function() {
   });
 
   $('#graph').on('click', function(e) {
-
+    graph.selectNode(e.pageX, e.pageY);
+    renderer.start();
   });
 
   $(document).on('keypress', function(e) {
     if (e.which === ENTER_KEY) {
       if (renderer.running === false) {
+        renderer.initializeRandomVelocities();
         renderer.start();
       }
       else {
