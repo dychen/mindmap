@@ -14,6 +14,10 @@ $(document).ready(function() {
     renderer.drawNode(node);
   });
 
+  $('#graph').on('click', function(e) {
+
+  });
+
   $(document).on('keypress', function(e) {
     if (e.which === ENTER_KEY) {
       if (renderer.running === false) {

@@ -2,6 +2,7 @@
  * Reminders:
  * - I'm currently using _.bind for scope bindings. May need to change this
  *   later for performance.
+ * - Consider implementing a priority queue for better collision handling.
  */
 
 //window.requestAnimationFrame = window.requestAnimationFrame ||
@@ -49,11 +50,23 @@ Renderer.prototype.applyPhysics = function() {
   this.updateVelocities();
 };
 
+Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
+  if (node.data.xPos - graph.offsets.xOffset - node.data.radius <= 0 ||
+      node.data.xPos - graph.offsets.xOffset + node.data.radius >= graph.canvas.width) {
+    node.data.xVel = -node.data.xVel;
+  }
+  if (node.data.yPos - graph.offsets.yOffset - node.data.radius <= 0 ||
+      node.data.yPos - graph.offsets.yOffset + node.data.radius >= graph.canvas.height) {
+    node.data.yVel = -node.data.yVel;
+  }
+}
+
 /*
  * x' = x + v dt
  */
 Renderer.prototype.updatePositions = function() {
   this.graph.nodes.forEach(_.bind(function(node) {
+    this.checkBoundaryCollisions(node, this.graph);
     node.data.xPos += node.data.xVel * this.env.dt;
     node.data.yPos += node.data.yVel * this.env.dt;
   }, this));
