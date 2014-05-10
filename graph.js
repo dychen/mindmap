@@ -22,6 +22,7 @@ var Node = function(pos, vel, acc, rad) {
 var Edge = function(node1, node2) {
   this.v1 = node1;
   this.v2 = node2;
+  this.tension = new Vector(0.0, 0.0);
 }
 
 var Graph = function() {
@@ -122,6 +123,8 @@ Graph.prototype.selectMovingNode = function(node) {
 Graph.prototype.moveNodeToMouse = function(node, xCoord, yCoord) {
   node.vel.x = (xCoord - node.pos.x) * 10;
   node.vel.y = (yCoord - node.pos.y) * 10;
+  node.acc.x += sign(node.vel.x) * 0.01;
+  node.acc.y += sign(node.vel.y) * 0.01;
 };
 
 Graph.prototype.deselectMovingNode = function() {

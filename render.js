@@ -17,9 +17,7 @@ var start = 0;
 
 var Renderer = function(graph) {
   this.env = {
-    ke: 0.1,      // Self-defined Coulomb's constant
-    ks: 0.05,     // Self-defined spring constant
-    cs: 0.5,      // Damping coefficient
+    cs: 2,        // Damping coefficient
     dt: 1.0 / 60  // Time step
   }
   this.running = false;
@@ -47,10 +45,7 @@ Renderer.prototype.step = function() {
  *       functions. Might not be accurate, though.
  */
 Renderer.prototype.applyPhysics = function() {
-  // TODO: Might need a single pass over all of the forces for more accuracy.
   this.applyForces();            // O(V^2)
-  //this.applyElectricRepulsion(); // O(V^2)
-  //this.applyRestoringForce();    // O(E)
   this.handleCollisions();       // O(V)
   this.updatePositions();        // O(V)
   this.updateVelocities();       // O(V)
@@ -79,83 +74,39 @@ Renderer.prototype.checkBoundaryCollisions = function(node, graph) {
   }
 };
 
-/*
- * Apply damped harmonic oscillation:
- * F = -kx-cv
- */
 Renderer.prototype.applyForces = function() {
+  // Approximate tensions
+  this.graph.edges.forEach(_.bind(function(edge) {
+    edge.tension.x = 0.0;
+    edge.tension.y = 0.0;
+    if ((edge.v2.pos.x - edge.v1.pos.x) * edge.v1.acc.x > 0) {
+      edge.tension.x += edge.v1.acc.x;
+    }
+    if ((edge.v1.pos.x - edge.v2.pos.x) * edge.v2.acc.x > 0) {
+      edge.tension.x += edge.v2.acc.x;
+    }
+    if ((edge.v2.pos.y - edge.v1.pos.y) * edge.v1.acc.y > 0) {
+      edge.tension.y += edge.v1.acc.y;
+    }
+    if ((edge.v1.pos.y - edge.v2.pos.y) * edge.v2.acc.y > 0) {
+      edge.tension.y += edge.v2.acc.y;
+    }
+  }, this));
   this.graph.nodes.forEach(function(node) {
     node.acc.x = 0;
     node.acc.y = 0;
   });
+  // Calculate force due to tension.
   this.graph.edges.forEach(_.bind(function(edge) {
-    var node1 = edge.v1;
-    var node2 = edge.v2;
-    var xDist = node2.pos.x - node1.pos.y;
-    var yDist = node2.pos.y - node1.pos.y;
-    var da1x = this.env.ks * xDist - this.env.cs * node1.vel.x;
-    var da1y = this.env.ks * yDist - this.env.cs * node1.vel.y;
-    var da2x = this.env.ks * xDist + this.env.cs * node2.vel.x;
-    var da2y = this.env.ks * yDist + this.env.cs * node2.vel.y;
-    node1.acc.x += da1x;
-    node1.acc.y += da1y;
-    node2.acc.x -= da2x;
-    node2.acc.y -= da2y;
+    edge.v1.acc.x -= edge.tension.x/2;
+    edge.v1.acc.y -= edge.tension.y/2;
+    edge.v2.acc.x -= edge.tension.x/2;
+    edge.v2.acc.y -= edge.tension.y/2;
   }, this));
-  this.graph.nodes.forEach(function(node) {
-    node.acc.x /= (node.rad * node.sizeMassRatio);
-    node.acc.y /= (node.rad * node.sizeMassRatio);
-  });
-};
-
-/*
- * UNUSED
- * Apply Coulomb's law: F = k(q1 q2)/ r^2 * rhat = m a
- *                      a = k(q1 q2)/(r^2 m) * rhat
- *                      where rhat is the unit direction vector.
- * Let charge and k be constants.
- */
-Renderer.prototype.applyElectricRepulsion = function() {
-  if (this.graph.nodes.length > 1) {
-    for (var i = 0; i < this.graph.nodes.length - 1; i++) {
-      var node1 = this.graph.nodes[i];
-      for (var j = i + 1; j < this.graph.nodes.length; j++) {
-        var node2 = this.graph.nodes[j];
-        var xDist = node1.pos.x - node2.pos.x;
-        var yDist = node1.pos.y - node2.pos.y;
-        // Add a slight displacement to avoid divide by zero errors for
-        // overlapping nodes.
-        var mag = Math.sqrt(xDist * xDist + yDist * yDist) + 0.00001;
-        var da1 = this.env.ke / (mag * mag * mag * node1.rad * node1.sizeMassRatio);
-        var da2 = this.env.ke / (mag * mag * mag * node2.rad * node2.sizeMassRatio);
-        node1.acc.x += da1 * xDist;
-        node1.acc.y += da1 * yDist;
-        node2.acc.x -= da2 * xDist;
-        node2.acc.y -= da2 * yDist;
-      }
-    }
-  }
-};
-
-/*
- * UNUSED
- * Apply Hooke's Law (with damping): F = -k x xhat = m a
- *                                   a = -k x xhat / m
- *                                   where xhat is the unit direction vector.
- * Let k be a constant.
- */
-Renderer.prototype.applyRestoringForce = function() {
-  this.graph.edges.forEach(_.bind(function(edge) {
-    var node1 = edge.v1;
-    var node2 = edge.v2;
-    var xDist = node2.pos.x - node1.pos.x;
-    var yDist = node2.pos.y - node1.pos.y;
-    var da1 = this.env.ks / (2 * node1.rad * node1.sizeMassRatio);
-    var da2 = this.env.ks / (2 * node2.rad * node2.sizeMassRatio);
-    node1.acc.x += da1 * xDist;
-    node1.acc.y += da1 * yDist;
-    node2.acc.x -= da2 * xDist;
-    node2.acc.y -= da2 * yDist;
+  // Apply damping force.
+  this.graph.nodes.forEach(_.bind(function(node) {
+    node.acc.x += -node.vel.x * this.env.cs;
+    node.acc.y += -node.vel.y * this.env.cs;
   }, this));
 };
 

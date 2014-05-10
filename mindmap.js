@@ -1,3 +1,7 @@
+/*
+ * TODO: Fix memory leaks
+ */
+
 $(document).ready(function() {
   ENTER_KEY = 13;
   var graph = new Graph();
