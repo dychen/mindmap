@@ -98,10 +98,10 @@ Renderer.prototype.applyForces = function() {
   });
   // Calculate force due to tension.
   this.graph.edges.forEach(_.bind(function(edge) {
-    edge.v1.acc.x -= edge.tension.x/2;
-    edge.v1.acc.y -= edge.tension.y/2;
-    edge.v2.acc.x -= edge.tension.x/2;
-    edge.v2.acc.y -= edge.tension.y/2;
+    edge.v1.acc.x -= edge.tension.x/this.graph.edges.length;
+    edge.v1.acc.y -= edge.tension.y/this.graph.edges.length;
+    edge.v2.acc.x -= edge.tension.x/this.graph.edges.length;
+    edge.v2.acc.y -= edge.tension.y/this.graph.edges.length;
   }, this));
   // Apply damping force.
   this.graph.nodes.forEach(_.bind(function(node) {
