@@ -33,6 +33,8 @@ $(document).ready(function() {
     if (graph.selectedNode !== null &&
         graph.findNode(e.pageX, e.pageY) === graph.selectedNode) {
       graph.drawingEdge = true;
+      graph.selectDestinationNode(graph.findNode(e.pageX, e.pageY));
+      renderer.start();
     }
     else if (graph.selectedNode === null) {
       graph.selectMovingNode(graph.findNode(e.pageX, e.pageY));
